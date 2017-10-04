@@ -1,0 +1,114 @@
+1) Download and install OS, default settings is ok
+2) Update using update GUI manager
+3) run
+Code:
+sudo add-apt-repository ppa:graphics-drivers/ppa
+sudo apt-get update && clear && apt-get install nvidia-384 nano openssh-server screen
+sudo update-grub
+Also, remove SUDO prompt's as 
+
+Code:
+sudo visudo -f /etc/sudoers
+
+add line
+
+Code:
+usernameusedforlogin ALL=(ALL) NOPASSWD:ALL
+
+usernameusedforlogin is your current username 
+save
+
+Code:
+esc :wq!
+
+
+4)Download and unzip Claymore Dual Miner from here https://github.com/nanopool/Claymore-Dual-Miner/releases
+ Personally I'm create folder called miner, so from here i will use path /miner in all examples
+ 
+5) Create XORG config file as follow
+Code:
+sudo nvidia-xconfig -a  --allow-empty-initial-configuration --enable-all-gpus --cool-bits=31  
+sudo mv /etc/X11/xorg.conf /usr/share/X11/xorg.conf.d/20-nvidia.conf
+This will create dummy Screens and assing it per GPU
+Do not create xorg.conf again, it's will be created automaticly after restart
+
+6)RESTART
+
+7) go to Claymore-Dual-Miner directory (/miner in my case) and create file called start.sh
+Code:
+nano start.sh
+For NVIDIA 1070
+
+Code:
+#!/bin/sh
+cd /miner
+
+export DISPLAY=:0
+sudo nvidia-settings -a GPUMemoryTransferRateOffset[3]=1450
+sudo nvidia-settings -a GPUGraphicsClockOffset[3]=-100
+sudo nvidia-smi -pm 1
+sudo nvidia-smi -pl 145
+
+./ethdcrminer64
+
+for NVIDIA p106-100
+
+Code:
+#!/bin/sh
+cd /miner
+
+export DISPLAY=:0
+sudo nvidia-settings -a GPUMemoryTransferRateOffset[3]=1111
+sudo nvidia-settings -a GPUGraphicsClockOffset[3]=-100
+sudo nvidia-smi -pm 1
+sudo nvidia-smi -pl 98
+
+./ethdcrminer64
+
+Both this files, will overclock GPU's and will reduce power drain
+
+make it exacutable
+
+Code:
+chmod a+x start.sh
+
+Cool create or open config.txt
+Code:
+nano config.txt
+Add follow
+
+Code:
+-epool POOL-NAME:PORT
+-ewal WalletID.MinerName/Your@email
+-epsw x
+-esm 0
+-estale 0
+-mode 1
+-asm  1
+-tstop 95
+-ftime 10
+-wd 1
+-r  0
+
+Save
+
+9) crete file called autorun.sh
+it's will use screen and autologin
+add follow
+
+Code:
+#!/bin/sh
+PROCESS="miner"
+screen  -mS $PROCESS  /miner/start.sh
+PID=`screen -list | grep $PROCESS | cut -f1 -d'.' | sed 's/\W//g'`
+echo $PID > /tmp/$PROCESS.pid
+read
+Agin, check path and make it executable
+chmod a+x autorun.sh
+
+them find "Startup Application" in Unity dash, create new startup enry and type (in command box)
+
+Code:
+gnome-terminal-command /miner/autorun.sh
+
+10) Ok your miner is ready, reboot and enjoy
